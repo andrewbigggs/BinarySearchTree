@@ -1,6 +1,6 @@
 //============================================================================
 // Name        : BinarySearchTree.cpp
-// Author      : J, Andrew Biggs
+// Author      : John Watson, Andrew Biggs (version 2.0)
 // Version     : 2.0
 // Copyright   : Copyright © 2017 SNHU COCE
 // Description : Hello World in C++, Ansi-style
@@ -74,6 +74,7 @@ private:
 public:
     BinarySearchTree();
     virtual ~BinarySearchTree();
+    void DestroyRecursive(Node* node);
     void InOrder();
     void PostOrder();
     void PreOrder();
@@ -93,11 +94,25 @@ BinarySearchTree::BinarySearchTree() {
 
 /**
  * Destructor
+ *
+ * Credit: https://stackoverflow.com/a/34170243
  */
 BinarySearchTree::~BinarySearchTree() {
-    // recurse from root deleting every node
+    DestroyRecursive(root);
 }
 
+/**
+ * Recursive function for destructor
+ *
+ * Credit: https://stackoverflow.com/a/34170243
+ */
+void BinarySearchTree::DestroyRecursive(Node* node) {
+    if (node) {
+        DestroyRecursive(node->left);
+        DestroyRecursive(node->right);
+        delete node;
+    }
+}
 /**
  * Traverse the tree in order
  */
