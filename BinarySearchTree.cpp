@@ -66,7 +66,8 @@ private:
     void inOrder(Node* node);
     void postOrder(Node* node);
     void preOrder(Node* node);
-    Node* removeNode(Node* node, string bidId);
+    Node* getParent(Node* parent, Node* node);
+    Node* removeNode(Node* parent, Node* node);
 
 public:
     BinarySearchTree();
@@ -76,7 +77,7 @@ public:
     void PreOrder();
     void Insert(Bid bid);
     void Remove(string bidId);
-    Bid Search(string bidId);
+    Node* Search(string bidId);
     void DisplayBid(Bid bid);
 };
 
@@ -117,6 +118,8 @@ void BinarySearchTree::PreOrder() {
 
 /**
  * Insert a bid
+ *
+ *@param bid The bid to be inserted as a node in the tree
  */
 void BinarySearchTree::Insert(Bid bid) {
     /// root pointer does not point to a node
@@ -124,27 +127,33 @@ void BinarySearchTree::Insert(Bid bid) {
         root = new Node(bid);
     /// add the bid to the appropriate location in the tree
     else
-        this->addNode(root, bid);
+        addNode(root, bid);
 }
 
 /**
  * Remove a bid
+ *
+ *@param bidId The bidId to be removed from the tree.
  */
 void BinarySearchTree::Remove(string bidId) {
-    this->removeNode(root, bidId);
+    Node* node = Search(bidId);
+    Node* parent = getParent(root, node);
+    this->removeNode(parent, node);
 }
 
 /**
  * Search for a bid
+ *
+ *@param bidId The bidId that will be checked against the tree's nodes' bidIds
  */
-Bid BinarySearchTree::Search(string bidId) {
+Node* BinarySearchTree::Search(string bidId) {
     /// Start searching from root node
     Node* curNode = root;
     
     while (curNode != nullptr) {
         /// If current node's bidId matches
         if (curNode->bid.bidId == bidId) {
-            return curNode->bid;
+            return curNode;
         }
         /// bidId is lesser than current node's bidId
         if (curNode->bid.bidId > bidId) {
@@ -155,8 +164,7 @@ Bid BinarySearchTree::Search(string bidId) {
             curNode = curNode->right;
     }
     
-    Bid bid;
-    return bid;
+    return nullptr;
 }
 
 /**
@@ -170,31 +178,34 @@ void BinarySearchTree::DisplayBid(Bid bid) {
     return;
 }
 
-
 /**
  * Add a bid to some node (recursive)
  *
- * @param node Current node in tree
+ * @param curNode Current node in tree
  * @param bid Bid to be added
  */
-void BinarySearchTree::addNode(Node* node, Bid bid) {
+void BinarySearchTree::addNode(Node* curNode, Bid bid) {
     /// Find the bid's spot in the Tree by recursive searching the nodes for its appropriate location
     /// Add node to left subtree
-    if (node->bid.bidId > bid.bidId) {
-        if (node->left == nullptr)
-            node->left = new Node(bid);
+    if (curNode->bid.bidId > bid.bidId) {
+        if (curNode->left == nullptr)
+            curNode->left = new Node(bid);
         else
-            this->addNode(node->left, bid);
+            this->addNode(curNode->left, bid);
     }
     /// Add node to right subtree
     else {
-        if (node->right == nullptr)
-            node->right = new Node(bid);
+        if (curNode->right == nullptr)
+            curNode->right = new Node(bid);
         else
-            this->addNode(node->right, bid);
+            this->addNode(curNode->right, bid);
     }
 }
-
+/**
+ * Inorder tree traversal (recursive)
+ *
+ *@param node Current node in tree
+ */
 void BinarySearchTree::inOrder(Node* node) {
     if (node == nullptr) {
         cout << "Tree is empty" << endl;
@@ -208,7 +219,11 @@ void BinarySearchTree::inOrder(Node* node) {
     if (node->right != nullptr)
         inOrder(node->right);
 }
-
+/**
+ * Post-order tree traversal (recursive)
+ *
+ *@param node Current node in tree
+ */
 void BinarySearchTree::postOrder(Node* node) {
     if (node == nullptr) {
         cout << "Tree is empty" << endl;
@@ -221,7 +236,11 @@ void BinarySearchTree::postOrder(Node* node) {
     
     DisplayBid(node->bid);
 }
-
+/**
+ * Pre-order tree traversal (recursive)
+ *
+ *@param node Current node in tree
+ */
 void BinarySearchTree::preOrder(Node* node) {
     if (node == nullptr) {
         cout << "Tree is empty" << endl;
@@ -236,48 +255,69 @@ void BinarySearchTree::preOrder(Node* node) {
         preOrder(node->right);
 }
 
-Node* BinarySearchTree::removeNode(Node* curNode, string bidId) {
+/**
+ * Get parent node
+ *
+ *@param node Pointer to the node whose parent is ascertained
+ */
+Node* BinarySearchTree::getParent(Node* subTreeRoot, Node* node) {
+    if (subTreeRoot == nullptr)
+        return nullptr;
+     
+    if (subTreeRoot->left == node || subTreeRoot->right == node)
+        return subTreeRoot;
+
+    if (node->bid.bidId < subTreeRoot->bid.bidId)
+        return getParent(subTreeRoot->left, node);
+    return getParent(subTreeRoot->right, node);
+}
+/**
+ * Removes node with bidId equal to string parameter (recursive)
+ *
+ *@param node The node to be deleted
+ *@param parent The parent of the node to be deleted
+*/
+Node* BinarySearchTree::removeNode(Node* parent, Node* node) {
     /// Avoid program crash in case root node is null
-    if (curNode == nullptr) {
+    string bidId = node->bid.bidId;
+    if (node == nullptr) {
         cout << endl << "Bid " << bidId << " not found." << endl;
-        return curNode;
+        return node;
     }
-    /// Recurse left subtree
-    if (curNode->bid.bidId > bidId)
-        curNode->left = removeNode(curNode->left, bidId);
-    /// Recurse right subtree
-    else if (curNode->bid.bidId < bidId)
-        curNode->right = removeNode(curNode->right, bidId);
     /// Node matches, remove node
+    /// Node to be deleted has two children
+    if (node->left != nullptr && node->right != nullptr) {
+        Node* succNode = node->right;
+        Node* successorParent = node;
+        while (succNode->left != nullptr) {
+            successorParent = succNode;
+            succNode = succNode->left;
+        }
+        node->bid = succNode->bid;
+        node->right = removeNode(successorParent, succNode);
+    }
+    /// Root node with 1 or 0 children
+    else if (node == root) {
+        if (node->left != nullptr)
+            root = node->left;
+        else
+            root = node->right;
+    }
+    /// Internal node with left child only
+    else if (node->left != nullptr) {
+        /// Replace node with node's left child
+        if (parent->left == node)
+            parent->left = node->left;
+        else
+            parent->right = node->left;
+    }
+    /// Leaf or internal node with right child only
     else {
-        /// Leaf node
-        if (curNode->left == nullptr && curNode->right == nullptr) {
-            delete curNode;
-            curNode = nullptr;
-            cout << endl << "Bid " << bidId << " removed." << endl;
-        }
-        /// Node to be deleted has a left child
-        else if (curNode->left != nullptr && curNode->right == nullptr) {
-            Node* temp = curNode;
-            curNode = curNode->left;
-            delete temp;
-            cout << endl << "Bid " << bidId << " removed." << endl;
-        }
-        /// Node to be deleted has a right child
-        else if (curNode->left == nullptr && curNode->right != nullptr) {
-            Node* temp = curNode;
-            curNode = curNode->right;
-            delete temp;
-            cout << endl << "Bid " << bidId << " removed." << endl;
-        }
-        /// Node to be deleted has two children
-        else {
-            Node* temp = curNode->right;
-            while (temp->left != nullptr)
-                temp = temp->left;
-            curNode->bid = temp->bid;
-            curNode->right = removeNode(curNode->right, temp->bid.bidId);
-        }
+        /// Replace node with node's right child
+        if (parent->left == node)
+            parent->left = node->right;
+        else
+            parent->right = node->right;
     }
     return nullptr;
 }
@@ -367,6 +407,7 @@ int main(int argc, char* argv[]) {
     BinarySearchTree* bst;
     bst = new BinarySearchTree();
     Bid bid;
+    Node* node;
 
     int choice = 0;
     while (choice != 9) {
@@ -405,13 +446,13 @@ int main(int argc, char* argv[]) {
             cin >> bidKey;
             
             ticks = clock();
-
-            bid = bst->Search(bidKey);
+            
+            node = bst->Search(bidKey);
 
             ticks = clock() - ticks; // current clock ticks minus starting clock ticks
 
-            if (!bid.bidId.empty()) {
-                bst->DisplayBid(bid);
+            if (!node->bid.bidId.empty()) {
+                bst->DisplayBid(node->bid);
             } else {
             	cout << "Bid Id " << bidKey << " not found." << endl;
             }
