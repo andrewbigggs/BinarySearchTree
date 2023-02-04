@@ -451,7 +451,7 @@ int main(int argc, char* argv[]) {
 
             ticks = clock() - ticks; // current clock ticks minus starting clock ticks
 
-            if (!node->bid.bidId.empty()) {
+            if (node != nullptr) {
                 bst->DisplayBid(node->bid);
             } else {
             	cout << "Bid Id " << bidKey << " not found." << endl;
