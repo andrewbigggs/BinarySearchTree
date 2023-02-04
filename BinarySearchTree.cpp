@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <time.h>
+#include <string>
 
 #include "CSVparser.hpp"
 
@@ -61,6 +62,7 @@ class BinarySearchTree {
 
 private:
     Node* root;
+    int size;
 
     void addNode(Node* node, Bid bid);
     void inOrder(Node* node);
@@ -79,6 +81,7 @@ public:
     void Remove(string bidId);
     Node* Search(string bidId);
     void DisplayBid(Bid bid);
+    int GetSize();
 };
 
 /**
@@ -123,8 +126,10 @@ void BinarySearchTree::PreOrder() {
  */
 void BinarySearchTree::Insert(Bid bid) {
     /// root pointer does not point to a node
-    if (root == nullptr)
+    if (root == nullptr) {
         root = new Node(bid);
+        size++;
+    }
     /// add the bid to the appropriate location in the tree
     else
         addNode(root, bid);
@@ -137,8 +142,13 @@ void BinarySearchTree::Insert(Bid bid) {
  */
 void BinarySearchTree::Remove(string bidId) {
     Node* node = Search(bidId);
+    if (node == nullptr) {
+        cout << bidId << " not found." << endl;
+        return;
+    }
+    cout << bidId << " removed." << endl;
     Node* parent = getParent(root, node);
-    this->removeNode(parent, node);
+    removeNode(parent, node);
 }
 
 /**
@@ -178,6 +188,10 @@ void BinarySearchTree::DisplayBid(Bid bid) {
     return;
 }
 
+int BinarySearchTree::GetSize() {
+    return size;
+}
+
 /**
  * Add a bid to some node (recursive)
  *
@@ -188,15 +202,19 @@ void BinarySearchTree::addNode(Node* curNode, Bid bid) {
     /// Find the bid's spot in the Tree by recursive searching the nodes for its appropriate location
     /// Add node to left subtree
     if (curNode->bid.bidId > bid.bidId) {
-        if (curNode->left == nullptr)
+        if (curNode->left == nullptr) {
             curNode->left = new Node(bid);
+            size++;
+        }
         else
             this->addNode(curNode->left, bid);
     }
     /// Add node to right subtree
     else {
-        if (curNode->right == nullptr)
+        if (curNode->right == nullptr) {
             curNode->right = new Node(bid);
+            size++;
+        }
         else
             this->addNode(curNode->right, bid);
     }
@@ -408,8 +426,9 @@ int main(int argc, char* argv[]) {
     bst = new BinarySearchTree();
     Bid bid;
     Node* node;
-
-    int choice = 0;
+    string lavatory;
+    
+    int choice = -1;
     while (choice != 9) {
         cout << "Menu:" << endl;
         cout << "  1. Load Bids" << endl;
@@ -419,7 +438,12 @@ int main(int argc, char* argv[]) {
         cout << "  9. Exit" << endl;
         cout << "Enter choice: ";
         cin >> choice;
-
+        if (cin.fail() || (choice != 1 && choice != 2 && choice != 3 && choice != 4 && choice != 9)) {
+            cout << "Bad input." << endl;
+            cin.clear();
+            getline(cin, lavatory);
+            continue;
+        }
         switch (choice) {
 
         case 1:
@@ -430,7 +454,7 @@ int main(int argc, char* argv[]) {
             // Complete the method call to load the bids
             loadBids(csvPath, bst);
 
-            //cout << bst->Size() << " bids read" << endl;
+            cout << bst->GetSize() << " bids read" << endl;
 
             // Calculate elapsed time and display result
             ticks = clock() - ticks; // current clock ticks minus starting clock ticks
@@ -439,9 +463,33 @@ int main(int argc, char* argv[]) {
             break;
 
         case 2:
-            bst->InOrder();
+            choice = -1;
+            while (choice != 1 && choice != 2 && choice != 3) {
+                cout << "Display All Bids:" << endl;
+                cout << " 1. Inorder" << endl;
+                cout << " 2. Post-order" << endl;
+                cout << " 3. Pre-order" << endl;
+                cin >> choice;
+                if (cin.fail() || (choice != 1 && choice != 2 && choice != 3)) {
+                    cout << "Bad input." << endl;
+                    cin.clear();
+                    getline(cin, lavatory);
+                    continue;
+                }
+                switch (choice) {
+                
+                case 1:
+                    bst->InOrder();
+                    break;
+                case 2:
+                    bst->PostOrder();
+                    break;
+                case 3:
+                    bst->PreOrder();
+                    break;
+                }
+            }
             break;
-
         case 3:
             cin >> bidKey;
             
@@ -469,7 +517,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    cout << "Good bye." << endl;
+    cout << "Good bye. Thank you for using our Binary Search Tree program!" << endl;
 
 	return 0;
 }
