@@ -117,21 +117,21 @@ void BinarySearchTree::DestroyRecursive(Node* node) {
  * Traverse the tree in order
  */
 void BinarySearchTree::InOrder() {
-    this->inOrder(root);
+    inOrder(root);
 }
 
 /**
  * Traverse the tree in post-order
  */
 void BinarySearchTree::PostOrder() {
-    this->postOrder(root);
+    postOrder(root);
 }
 
 /**
  * Traverse the tree in pre-order
  */
 void BinarySearchTree::PreOrder() {
-    this->preOrder(root);
+    preOrder(root);
 }
 
 /**
@@ -309,6 +309,8 @@ Node* BinarySearchTree::getParent(Node* subTreeRoot, Node* node) {
  *
  *@param node The node to be deleted
  *@param parent The parent of the node to be deleted
+ *
+ * Credit: ZYBooks CS300: Data Structures and Algorithms
 */
 Node* BinarySearchTree::removeNode(Node* parent, Node* node) {
     /// Avoid program crash in case root node is null
